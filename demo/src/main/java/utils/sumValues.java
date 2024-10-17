@@ -8,40 +8,48 @@ import controller.EntradaFinanceiraController;
 
 public class sumValues {
 
-    static List<Document> entradas = EntradaFinanceiraController.getEntries();
 
-    public static double calculaValores() {
+    public static double calculaValorTotal() {
+
+         List<Document> entradas = EntradaFinanceiraController.getEntries();
+
         double valorTotal = 0;
 
         for (Document item : entradas) {
             if ("Ganho".equals(item.getString("tipoEntrada"))) {
-                valorTotal += item.getDouble("valor") != null ? item.getDouble("valor") : 0;
-            } else {
-                valorTotal -= item.getDouble("valor") != null ? item.getDouble("valor") : 0;
+                valorTotal += item.getDouble("valor");
+            } else if("Gasto".equals(item.getString("tipoEntrada"))){
+                valorTotal -= item.getDouble("valor");
             }
         }
 
         return valorTotal;
     }
 
-    public static double calculaGanhos() {
+    public static double calculaValorGanho(){
+
+        List<Document> entradas = EntradaFinanceiraController.getEntries();
+
         double valorGanhos = 0;
 
-        for (Document item : entradas) {
-            if ("Ganho".equals(item.getString("tipoEntrada"))) {
-                valorGanhos += item.getDouble("valor") != null ? item.getDouble("valor") : 0;
+        for(Document item : entradas){
+            if("Ganho".equals(item.getString("tipoEntrada"))){
+                valorGanhos += item.getDouble("valor");
             }
         }
 
         return valorGanhos;
     }
 
-    public static double calculaGastos() {
+    public static double caluclaValorGasto(){
+
+        List<Document> entradas = EntradaFinanceiraController.getEntries();
+
         double valorGastos = 0;
 
-        for (Document item : entradas) {
-            if ("Gasto".equals(item.getString("tipoEntrada"))) {
-                valorGastos += item.getDouble("valor") != null ? item.getDouble("valor") : 0;
+        for(Document item : entradas){
+            if("Gasto".equals(item.getString("tipoEntrada"))){
+                valorGastos += item.getDouble("valor");
             }
         }
 

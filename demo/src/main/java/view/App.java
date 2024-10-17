@@ -18,6 +18,7 @@ import org.bson.Document;
 
 import controller.EntradaFinanceiraController;
 import model.EntradaFinanceira;
+import utils.sumValues;
 import utils.enums.Classifications;
 
 import java.util.Date;
@@ -29,15 +30,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class App{
 
     public App() {
 
-        JFrame frame = new JFrame("Finances");
+        JFrame frame = new JFrame("Gestão de Finanças");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1920,1080);
-        frame.setLayout(new GridLayout(10,5));
+        frame.setLayout(new GridLayout(10,10));
 
         JPanel tela = new JPanel(new FlowLayout(FlowLayout.CENTER));
         tela.setSize(1920,1080);
@@ -68,9 +70,10 @@ public class App{
 
         JTable tabela = new JTable(tabelModel);
 
-        JScrollPane scrollPane = new JScrollPane(tabela);
+        tabela.setPreferredScrollableViewportSize(tabela.getPreferredSize()); // Ajusta a tabela de acordo com o tamanho preferido
 
-        frame.add(tela);
+        JScrollPane scrollPane = new JScrollPane(tabela);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         tela.add(labelNome);
         tela.add(inputNome);
@@ -89,6 +92,8 @@ public class App{
 
         tela.add(cadastrar);
 
+        frame.add(tela, BorderLayout.NORTH);
+
         frame.add(scrollPane, BorderLayout.CENTER);
 
         JButton deleteButton = new JButton("Excluir");
@@ -96,27 +101,56 @@ public class App{
         deleteButton.setVisible(false);
         tela.add(deleteButton);
 
+        JPanel areaValores = new JPanel(new FlowLayout(FlowLayout.CENTER));
+         frame.add(areaValores);
+        
+         JLabel valorD = new JLabel("Valor Disponivel R$ "+ sumValues.calculaValorTotal()+" | ");
+         JLabel valorGastos = new JLabel("Total Gastos R$ "+ sumValues.caluclaValorGasto()+" | ");
+         JLabel valorGanhos = new JLabel("Total Ganhos R$ "+ sumValues.calculaValorGanho()+" | ");
 
+         areaValores.add(valorGanhos);
+         areaValores.add(valorGastos);
+         areaValores.add(valorD);
+
+         frame.setVisible(true);
+
+        //função que acionada ao clicar em "Cadastrar"
         cadastrar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event){
                 try{
                     double valorEntrada = Double.parseDouble(inputValor.getText());
 
-                    String tipoEntrada;
+                    String tipoEntrada = "";
 
+                    //verifica qual o tipo da entrada
+                    if(receber.isSelected() && pagar.isSelected()){
+                        JOptionPane.showMessageDialog(null, "Erro! \n Selecione somente uma das opções (Ganho, Gasto)");
+                        return;
+                    }
                     if(receber.isSelected()){
-                        tipoEntrada = receber.getText();
+                        tipoEntrada = "Ganho";
+                    } else if(pagar.isSelected()){
+                        tipoEntrada = "Gasto";
                     } else{
-                        tipoEntrada = receber.getText();
+                        JOptionPane.showMessageDialog(null, "Seleciona uma das opcões (Gasto, Ganho)");
+                        return;
                     }
 
+                    //cria a entrada passando os valores inseridos
                     EntradaFinanceira entrada = new EntradaFinanceira(inputNome.getText(), (Classifications) inputClassif.getSelectedItem(), valorEntrada, inputData.getText(), LocalDate.now(), tipoEntrada);
 
+                    //cria a entrada no banco de dados
                     EntradaFinanceiraController.createEntry(entrada);
                 
                     JOptionPane.showMessageDialog(frame, "Entrada cadastrada com sucesso!");
 
-                    tabelModel.addRow(new Object[]{inputNome.getText(), (Classifications) inputClassif.getSelectedItem(), "R$" +valorEntrada, inputData.getText(), LocalDate.now()});
+                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    String dataFormatada = LocalDate.now().format(dateFormatter);
+
+                    //adiciona os dados a tabela dinamicamente
+                    tabelModel.addRow(new Object[]{inputNome.getText(), (Classifications) inputClassif.getSelectedItem(), "R$" +valorEntrada, inputData.getText(), dataFormatada});
+
+                    atualizarLabelsValores(valorD, valorGastos, valorGanhos);
 
                     //resetar os valores dos campos.
                     inputNome.setText("");
@@ -125,11 +159,13 @@ public class App{
 
                 } catch(NumberFormatException error){
                     JOptionPane.showMessageDialog(frame, "Favor preencher todos os campos!");
-                    System.out.println(error.getMessage());
+                    throw new NumberFormatException(error.getMessage());
+
                 }
             }
         });
 
+        //função para excluir a linha selecionada da tabela
         tabela.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent event){
@@ -150,17 +186,19 @@ public class App{
 
                             tabelModel.removeRow(selectedRow);
 
+                            atualizarLabelsValores(valorD, valorGastos, valorGanhos);
+
                             deleteButton.setEnabled(false);
 
                             deleteButton.setVisible(false);
                         }
                     });
+                } else{
+                    JOptionPane.showMessageDialog(null, "Erro! Algo deu errado ao selecionar a linha, tente novamnete!");
                 }
             }
         });
 
-        
-        frame.setVisible(true);
     }
 
     //método para criar a tabela
@@ -192,6 +230,13 @@ public class App{
 
         return tabelModel;
 
+    }
+
+    //função para atualizar os valroes conforme são adicionadas e retiradas entradas.
+    private void atualizarLabelsValores(JLabel valorD, JLabel valorGastos, JLabel valorGanhos) {
+        valorD.setText("Valor Disponivel R$ " + sumValues.calculaValorTotal() + " | ");
+        valorGastos.setText("Total Gastos R$ " + sumValues.caluclaValorGasto() + " | ");
+        valorGanhos.setText("Total Ganhos R$ " + sumValues.calculaValorGanho() + " | ");
     }
 
 }
