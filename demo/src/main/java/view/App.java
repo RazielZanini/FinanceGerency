@@ -111,6 +111,7 @@ public class App{
          areaValores.add(valorGanhos);
          areaValores.add(valorGastos);
          areaValores.add(valorD);
+         
 
          frame.setVisible(true);
 
@@ -131,9 +132,6 @@ public class App{
                         tipoEntrada = "Ganho";
                     } else if(pagar.isSelected()){
                         tipoEntrada = "Gasto";
-                    } else{
-                        JOptionPane.showMessageDialog(null, "Seleciona uma das opcões (Gasto, Ganho)");
-                        return;
                     }
 
                     //cria a entrada passando os valores inseridos
@@ -193,8 +191,6 @@ public class App{
                             deleteButton.setVisible(false);
                         }
                     });
-                } else{
-                    JOptionPane.showMessageDialog(null, "Erro! Algo deu errado ao selecionar a linha, tente novamnete!");
                 }
             }
         });
